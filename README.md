@@ -47,3 +47,92 @@ Kubernetes clusters are susceptible to various failures, including pod crashes, 
 ```bash
 git clone https://github.com/yourusername/k8s-failure-prediction.git
 cd k8s-failure-prediction
+```
+
+### Install Dependencies
+
+Install the required Python packages listed in the `requirements.txt`:
+
+```bash
+pip install -r requirements.txt
+```
+
+### Docker Setup
+
+1. **Build the Docker image:**
+
+   ```bash
+   docker build -t k8s-failure-prediction-app .
+   ```
+
+2. **Run the Docker container:**
+
+   ```bash
+   docker run -p 8501:8501 k8s-failure-prediction-app
+   ```
+
+### Kubernetes Deployment
+
+1. **Apply the Kubernetes deployment and service files:**
+
+   ```bash
+   kubectl apply -f kubernetes-deployment.yaml
+   kubectl apply -f kubernetes-service.yaml
+   ```
+
+2. **Access the app by finding the external IP of the service:**
+
+   ```bash
+   kubectl get services
+   ```
+
+### Redis Setup
+
+1. **Start the Redis server locally:**
+
+   ```bash
+   redis-server
+   ```
+
+2. **Or run Redis in a Docker container:**
+
+   ```bash
+   docker run --name redis -p 6379:6379 -d redis
+   ```
+
+## Running the Application
+
+To start the Streamlit application locally, run:
+
+```bash
+streamlit run app.py
+```
+
+The app allows users to input features such as `CPU usage`, `memory usage`, `pod status`, and `network I/O`, and get predictions on potential failures in the Kubernetes cluster.
+
+## MLflow Integration
+
+The project logs the trained model and metrics (e.g., accuracy) using MLflow:
+
+```python
+import mlflow.sklearn
+
+with mlflow.start_run():
+    mlflow.sklearn.log_model(model, 'k8s_failure_prediction_model.pkl')
+    mlflow.log_metric("Accuracy", accuracy)
+    mlflow.log_artifact('cluster_metrics.csv')
+```
+
+To run the MLflow script:
+
+```bash
+python mlflow_integration.py
+```
+
+## Contributing
+
+Contributions are welcome! Feel free to submit a pull request or raise an issue.
+
+## License
+
+This project is licensed under the MIT License.
