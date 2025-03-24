@@ -1,94 +1,21 @@
 import os
 import streamlit as st
 from crewai import Agent, Task, Crew, LLM
-
-from typing import Dict, List
+from typing import Dict, List, ClassVar, Optional
 from dotenv import load_dotenv
 import joblib
 import pandas as pd
-import requests
-from bs4 import BeautifulSoup
-from pydantic import BaseModel
+from crewai_tools import FirecrawlScrapeWebsiteTool
 load_dotenv()
 
 
-# class K8sDocSearchTool(BaseModel):
-#     name = "Kubernetes Documentation Search"
-#     description = "Search through predefined Kubernetes documentation sources"
+tool = FirecrawlScrapeWebsiteTool(url='https://komodor.com/learn/kubernetes-troubleshooting-the-complete-guide/',page_options = 'includeHtml')
 
-#     def __init__(self):
-#         self.docs_sources: Dict[str, str] = {
-#             "kubernetes": "https://kubernetes.io/docs/tasks/debug/debug-cluster/",
-#             "lumigo": "https://lumigo.io/kubernetes-troubleshooting/",
-#             "k21academy": "https://k21academy.com/docker-kubernetes/kubernetes-troubleshooting/"
-#         }
-#         self.cache: Dict[str, str] = {}  # Cache for storing fetched content
-        
-#         self.predefined_responses: Dict[str, str] = {
-#             "metrics": """
-#                 Common Kubernetes metrics include:
-#                 - CPU utilization
-#                 - Memory usage
-#                 - Pod status
-#                 - Node health
-#                 - Network throughput
-#             """,
-#             "failures": """
-#                 Common failure scenarios:
-#                 - Resource exhaustion
-#                 - Node failures
-#                 - Network partitioning
-#                 - Application crashes
-#             """,
-#             "monitoring": """
-#                 Key monitoring aspects:
-#                 - Resource utilization
-#                 - Pod health
-#                 - Service availability
-#                 - Network performance
-#                 - Storage metrics
-#             """
-#         }
 
-#     def fetch_doc_content(self, url: str) -> str:
-#         """Fetch and parse content from documentation URL"""
-#         if url in self.cache:
-#             return self.cache[url]
-            
-#         try:
-#             response = requests.get(url)
-#             response.raise_for_status()
-#             soup = BeautifulSoup(response.text, 'html.parser')
-#             # Extract main content, removing navigation and footer
-#             content = soup.find('main') or soup.find('article') or soup.find('div', class_='content')
-#             if content:
-#                 self.cache[url] = content.get_text()
-#                 return self.cache[url]
-#         except Exception as e:
-#             return f"Error fetching documentation: {str(e)}"
-#         return ""
-
-#     def _run(self, query: str) -> str:
-#         # First check predefined responses
-#         for keyword, response in self.predefined_responses.items():
-#             if keyword.lower() in query.lower():
-#                 return response
-        
-#         # Then search through documentation sources
-#         for source, url in self.docs_sources.items():
-#             if source.lower() in query.lower():
-#                 content = self.fetch_doc_content(url)
-#                 if content:
-#                     return f"Found in {source} documentation:\n{content[:500]}..."  # Return first 500 chars
-                
-#         return "Information not found in authorized documentation sources."
 
 # Load environment variables and model
 
-model = joblib.load('app/Machine_Failure_classification.pkl')
-
-# Initialize CrewAI tools
-# k8s_doc_tool = K8sDocSearchTool()
+model = joblib.load("C:\\Users\\HP\Desktop\\Team-BottleJob-Guidewire-DevTrails\\repo1\\MLops-Kubernetes\\app\\Machine_Failure_classification.pkl")
 
 # Configure the model
 model_agent = LLM(
@@ -133,7 +60,7 @@ You can interpret various performance indicators and identify patterns that migh
 
 prediction_analyst_backstory = """
 You are an ML model specialist focusing on prediction analysis and risk assessment.
-You can evaluate prediction results and provide detailed insights about potential system failures.
+You can evaluate prediction results and provide insights and troubleshoots about potential system failures.
 """
 
 # Implement Agents
@@ -143,17 +70,17 @@ metrics_analyzer = Agent(
     backstory=metrics_analyzer_backstory,
     verbose=True,
     allow_delegation=False,
-    # tools=[k8s_doc_tool],  # Replace existing tools with k8s_doc_tool
+    tools=[tool],  # Replace existing tools with k8s_doc_tool
     llm=model_agent
 )
 
 prediction_analyst = Agent(
     role="Prediction Analysis Expert",
-    goal="Evaluate prediction results and assess failure risks",
+    goal="Evaluate prediction results and assess failure risks and provide troubleshoots",
     backstory=prediction_analyst_backstory,
     verbose=True,
     allow_delegation=False,
-    # tools=[k8s_doc_tool],  # Replace existing tools with k8s_doc_tool
+    tools=[tool],  # Replace existing tools with k8s_doc_tool
     llm=model_agent
 )
 
@@ -163,16 +90,16 @@ task1 = Task(
     Analyze the Kubernetes cluster metrics: {cluster_metrics}
     Identify any concerning patterns or anomalies in the metrics.
     """,
-    expected_output="Detailed analysis of cluster metrics with identified patterns",
+    expected_output="Concise analysis of cluster metrics with identified patterns",
     agent=metrics_analyzer
 )
 
 task2 = Task(
     description=f"""
-    Using the ML model, predict potential failures and analyze the prediction confidence.
+    Using the ML model, predict potential failures.
     Current metrics: {cluster_metrics}
     """,
-    expected_output="Prediction results with confidence analysis",
+    expected_output="Prediction results with smart and intelligent analysis",
     agent=prediction_analyst
 )
 
@@ -180,11 +107,11 @@ task3 = Task(
     description="""
     Generate a comprehensive report including:
     1. Current cluster health status
-    2. Prediction results and confidence levels
+    2. Prediction results
     3. Recommended actions based on the analysis
     4. Potential risks and mitigation strategies
     """,
-    expected_output="Detailed technical report with recommendations",
+    expected_output="Directed and Concise Technical report with recommendations",
     agent=prediction_analyst,
     context=[task1, task2]
 )
