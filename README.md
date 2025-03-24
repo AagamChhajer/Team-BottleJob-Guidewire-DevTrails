@@ -1,138 +1,188 @@
-# Kubernetes Failure Prediction System
+# Kubernetes Cluster Health Prediction System with CrewAI Agents
 
-This project aims to develop a predictive maintenance system for Kubernetes clusters using machine learning algorithms. By analyzing historical and real-time cluster metrics, the system forecasts potential failures such as node or pod crashes, resource bottlenecks, and network issues, enabling proactive management and enhanced cluster reliability.
+## Overview
+This project implements an intelligent system for predicting and analyzing Kubernetes cluster health using CrewAI agents and machine learning. The system combines real-time metric analysis with ML predictions to provide comprehensive cluster health assessments and automated troubleshooting recommendations.
 
-## Table of Contents
+## Core Components
 
-- [Project Overview](#project-overview)
-- [Technologies Used](#technologies-used)
-- [Setup and Installation](#setup-and-installation)
-  - [Prerequisites](#prerequisites)
-  - [Clone the Repository](#clone-the-repository)
-  - [Install Dependencies](#install-dependencies)
-  - [Docker Setup](#docker-setup)
-  - [Kubernetes Deployment](#kubernetes-deployment)
-  - [Redis Setup](#redis-setup)
-- [Running the Application](#running-the-application)
-- [MLflow Integration](#mlflow-integration)
-- [Contributing](#contributing)
-- [License](#license)
+### 1. Machine Learning Model
+- **Random Forest Classifier** for failure prediction
+- **Preprocessing Pipeline** with StandardScaler
+- **Model Metrics**: Accuracy-based evaluation
+- **Model Persistence**: Saved as 'Machine_Failure_classification.pkl'
 
-## Project Overview
+### 2. CrewAI Agent Implementation
 
-Kubernetes clusters are susceptible to various failures, including pod crashes, resource exhaustion, and network disruptions. This project integrates functionalities from existing tools to predict such issues before they occur by analyzing key metrics like CPU usage, memory consumption, pod status, and network I/O. The system employs machine learning techniques, such as anomaly detection and time-series analysis, to forecast potential failures, thereby improving the resilience and reliability of Kubernetes clusters.
+#### Agents Structure
+1. **Metrics Analyzer Agent**
+   ```python
+   metrics_analyzer = Agent(
+       role="Kubernetes Metrics Analyzer",
+       goal="Analyze cluster metrics and identify potential issues",
+       backstory="Kubernetes metrics specialist with expertise in analyzing cluster performance metrics",
+       tools=[FirecrawlScrapeWebsiteTool],
+       llm=model_agent
+   )
+   ```
 
-## Technologies Used
+2. **Prediction Analyst Agent**
+   ```python
+   prediction_analyst = Agent(
+       role="Prediction Analysis Expert",
+       goal="Evaluate prediction results and assess failure risks",
+       backstory="ML model specialist focusing on prediction analysis and risk assessment",
+       tools=[FirecrawlScrapeWebsiteTool],
+       llm=model_agent
+   )
+   ```
 
-- **Streamlit**: Interactive UI for user input and results visualization.
-- **Redis**: In-memory data structure store used to cache predictions.
-- **Docker**: Containerization of the application for consistent deployment.
-- **Kubernetes**: Management of deployment, scaling, and orchestration of Docker containers.
-- **MLflow**: Tracking of model performance and metrics.
-- **Scikit-learn**: Machine learning algorithms for classification tasks.
-- **Pandas**: Data manipulation and analysis.
-- **Python 3.10**: Programming language used for development.
+#### Task Pipeline
+1. **Metric Analysis Task**
+   - Analyzes cluster metrics for patterns
+   - Identifies anomalies in performance
 
-## Setup and Installation
+2. **Prediction Task**
+   - Utilizes ML model for failure prediction
+   - Provides confidence scores
+
+3. **Report Generation Task**
+   - Compiles comprehensive analysis
+   - Generates actionable recommendations
+
+### 3. Monitored Metrics
+- Footfall (Resource Usage)
+- Temperature Mode
+- Air Quality (AQ)
+- Utilization Status (USS)
+- Cluster Status (CS)
+- Volatile Organic Compounds (VOC)
+- Resource Pressure (RP)
+- Infrastructure Performance (IP)
+- Temperature
+
+## Technical Implementation
+
+### Data Processing Pipeline
+```python
+preprocess_pipeline = Pipeline(
+    steps=[
+        ('scaler', StandardScaler())
+    ]
+)
+
+model_pipeline = Pipeline(
+    steps=[
+        ('model', RandomForestClassifier())
+    ]
+)
+```
+
+### Agent Tools Integration
+```python
+tool = FirecrawlScrapeWebsiteTool(
+    url='https://komodor.com/learn/kubernetes-troubleshooting-the-complete-guide/',
+    page_options='includeHtml'
+)
+```
+
+## Setup Instructions
 
 ### Prerequisites
+- Python 3.8+
+- pip
+- virtualenv
+- OpenAI API key
 
-- **Docker**: Install Docker from [here](https://docs.docker.com/get-docker/).
-- **Kubernetes**: Install Kubernetes (minikube recommended) from [here](https://kubernetes.io/docs/tasks/tools/).
-- **Redis**: Install Redis from [here](https://redis.io/download) or run it using Docker.
-- **Python 3.10**: Ensure Python is installed on your system.
+### Installation Steps
+1. **Clone Repository**
+   ```bash
+   git clone <repository-url>
+   cd Team-BottleJob-Guidewire-DevTrails
+   ```
 
-### Clone the Repository
+2. **Environment Setup**
+   ```bash
+   python -m venv ven
+   .\ven\Scripts\activate
+   pip install -r requirements.txt
+   ```
 
+3. **Configure Environment**
+   ```bash
+   # Create .env file
+   OPENAI_API_KEY=your_api_key_here
+   ```
+
+### Running the Application
 ```bash
-git clone https://github.com/yourusername/k8s-failure-prediction.git
-cd k8s-failure-prediction
+streamlit run .\repo1\MLops-Kubernetes\ambient_agent.py
 ```
 
-### Install Dependencies
+## Agent Workflow
 
-Install the required Python packages listed in the `requirements.txt`:
+1. **Data Collection**
+   - User inputs cluster metrics via Streamlit interface
+   - System prepares data for analysis
 
-```bash
-pip install -r requirements.txt
-```
-
-### Docker Setup
-
-1. **Build the Docker image:**
-
-   ```bash
-   docker build -t k8s-failure-prediction-app .
+2. **Agent Processing**
+   ```python
+   crew = Crew(
+       agents=[metrics_analyzer, prediction_analyst],
+       tasks=[task1, task2, task3],
+       verbose=True,
+       planning=True
+   )
    ```
 
-2. **Run the Docker container:**
+3. **Analysis Generation**
+   - Metrics analysis by Metrics Analyzer
+   - Failure prediction by ML model
+   - Risk assessment by Prediction Analyst
+   - Comprehensive report compilation
 
-   ```bash
-   docker run -p 8501:8501 k8s-failure-prediction-app
-   ```
+## Output Components
 
-### Kubernetes Deployment
+### 1. Prediction Results
+- Binary health status (Healthy/Risk of Failure)
+- Confidence metrics
+- Token usage statistics
 
-1. **Apply the Kubernetes deployment and service files:**
+### 2. Analysis Report
+- Detailed metric patterns
+- Anomaly detection results
+- Performance indicators
+- Risk assessment
 
-   ```bash
-   kubectl apply -f kubernetes-deployment.yaml
-   kubectl apply -f kubernetes-service.yaml
-   ```
-
-2. **Access the app by finding the external IP of the service:**
-
-   ```bash
-   kubectl get services
-   ```
-
-### Redis Setup
-
-1. **Start the Redis server locally:**
-
-   ```bash
-   redis-server
-   ```
-
-2. **Or run Redis in a Docker container:**
-
-   ```bash
-   docker run --name redis -p 6379:6379 -d redis
-   ```
-
-## Running the Application
-
-To start the Streamlit application locally, run:
-
-```bash
-streamlit run app.py
-```
-
-The app allows users to input features such as `CPU usage`, `memory usage`, `pod status`, and `network I/O`, and get predictions on potential failures in the Kubernetes cluster.
-
-## MLflow Integration
-
-The project logs the trained model and metrics (e.g., accuracy) using MLflow:
-
-```python
-import mlflow.sklearn
-
-with mlflow.start_run():
-    mlflow.sklearn.log_model(model, 'k8s_failure_prediction_model.pkl')
-    mlflow.log_metric("Accuracy", accuracy)
-    mlflow.log_artifact('cluster_metrics.csv')
-```
-
-To run the MLflow script:
-
-```bash
-python mlflow_integration.py
-```
+### 3. Recommendations
+- Preventive measures
+- Optimization suggestions
+- Troubleshooting steps
 
 ## Contributing
-
-Contributions are welcome! Feel free to submit a pull request or raise an issue.
+Contributions are welcome! Please read our contributing guidelines before submitting pull requests.
 
 ## License
+[Your chosen license]
 
-This project is licensed under the MIT License.
+## Authors
+Team BottleJob
+
+## Acknowledgments
+- CrewAI framework
+- Kubernetes documentation
+- OpenAI
+- Scikit-learn community
+
+## Project Structure
+```
+Team-BottleJob-Guidewire-DevTrails/
+├── app/
+│   ├── model.py                    # ML model implementation
+│   └── Machine_Failure_classification.pkl
+├── repo1/MLops-Kubernetes/
+│   └── ambient_agent.py           # CrewAI agent implementation
+├── scripts/
+│   └── preprocess.py              # Data preprocessing
+├── requirements.txt
+└── README.md
+```

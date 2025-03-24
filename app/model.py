@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 # Load the dataset
-df = pd.read_csv(r"C:\Users\Shreyansh Singh\Desktop\ML3\data\data.csv")
+df = pd.read_csv(r"data\data.csv")
 
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
