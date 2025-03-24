@@ -13,7 +13,7 @@ spec:
         app: ml3-app
     spec:
       containers:
-      - name: ml3-app-container
-        image: your-dockerhub-username/ml3-app:latest
+      -name: ml3-app-container
+        image:your-dockerhub-username/ml3-app:latest
         ports:
         - containerPort: 8501
