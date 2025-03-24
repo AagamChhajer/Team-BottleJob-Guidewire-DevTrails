@@ -15,7 +15,7 @@ tool = FirecrawlScrapeWebsiteTool(url='https://komodor.com/learn/kubernetes-trou
 
 # Load environment variables and model
 
-model = joblib.load("C:\\Users\\HP\Desktop\\Team-BottleJob-Guidewire-DevTrails\\repo1\\MLops-Kubernetes\\app\\Machine_Failure_classification.pkl")
+model = joblib.load(r'D:\Team-BottleJob-Guidewire-DevTrails\app\Machine_Failure_classification.pkl') 
 
 # Configure the model
 model_agent = LLM(
